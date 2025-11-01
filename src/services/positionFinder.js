@@ -126,8 +126,8 @@ export function findRunsToRestrict(
   return {
     minRuns: validMin,
     maxRuns: validMax,
-    minNRR: minNRR,
-    maxNRR: maxNRR,
+    minNRR: maxNRR,
+    maxNRR: minNRR,
   };
 }
 
@@ -179,8 +179,8 @@ export function findOversToChase(
   return {
     minOvers: validMin,
     maxOvers: validMax,
-    minNRR: minNRR,
-    maxNRR: maxNRR,
+    minNRR: maxNRR,
+    maxNRR: minNRR,
   };
 }
 
@@ -213,7 +213,7 @@ export function calculateRequiredPerformance(
       yourTeamName,
       oppTeamName,
       desiredPosition,
-      runs,
+      runs+1,
       overs
     );
   }

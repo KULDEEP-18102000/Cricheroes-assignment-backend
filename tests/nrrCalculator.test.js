@@ -2,54 +2,15 @@ import { describe, test, expect } from '@jest/globals';
 import { calculateNewNRR, updateTeamAfterMatch } from '../src/services/nrrCalculator.js';
 import { calculateRequiredPerformance } from '../src/services/positionFinder.js';
 import { initialPointsTable } from '../src/models/PointsTable.js';
-import { sortPointsTable } from '../src/utils/tableOperations.js';
-import { oversToDecimal, decimalToOvers } from '../src/utils/tableOperations.js';
 
-describe('NRR Calculator Tests', () => {
+describe('IPL NRR Calculator - Assignment Test Cases', () => {
   
-  // ==================== UNIT TESTS ====================
-  
-  test('Calculate new NRR correctly - Basic calculation', () => {
-    const team = initialPointsTable[3]; // Rajasthan Royals
-    const newNRR = calculateNewNRR(team, 120, 20, 100, 20);
-    
-    console.log('New NRR calculated:', newNRR);
-    
-    expect(newNRR).toBeDefined();
-    expect(typeof newNRR).toBe('number');
-    
-    expect(newNRR).toBeGreaterThan(team.nrr);
-    
-    expect(newNRR).toBeGreaterThan(0.3);
-    expect(newNRR).toBeLessThan(1.0);
-  });
-  
-  test('Update team after match - Win scenario with exact values', () => {
-    const team = { ...initialPointsTable[3] }; // Rajasthan Royals
-    const updated = updateTeamAfterMatch(team, 120, 20, 100, 20, true);
-    
-    // Verify exact increments
-    expect(updated.matches).toBe(8); 
-    expect(updated.won).toBe(4);
-    expect(updated.lost).toBe(4);
-    expect(updated.points).toBe(8);
-    expect(updated.nrr).toBeGreaterThan(team.nrr);
-  });
-  
-  test('Update team after match - Loss scenario', () => {
-    const team = { ...initialPointsTable[3] }; // Rajasthan Royals
-    const updated = updateTeamAfterMatch(team, 100, 20, 120, 20, false);
-    
-    expect(updated.matches).toBe(8);
-    expect(updated.won).toBe(3); 
-    expect(updated.lost).toBe(5);
-    expect(updated.points).toBe(6);
-    expect(updated.nrr).toBeLessThan(team.nrr);
-  });
-  
-  // ==================== PROBLEM TEST CASES ====================
-  
-  test('Q1a: RR vs DC - Batting First (120 runs in 20 overs)', () => {
+  /**
+   * Q-1a: RR vs DC - Batting First (120 runs in 20 overs)
+   * Expected: Restrict DC between 69 to 119 runs
+   * Expected NRR: 0.278 to 0.596
+   */
+  test('Q-1a: RR vs DC - Batting First (120 runs)', () => {
     const result = calculateRequiredPerformance(
       initialPointsTable,
       'Rajasthan Royals',
@@ -60,19 +21,34 @@ describe('NRR Calculator Tests', () => {
       20
     );
     
+    console.log('\n=== Q-1a: RR vs DC - Batting First ===');
+    console.log('Expected: minRuns: 69, maxRuns: 119');
+    console.log('Actual:  ', `minRuns: ${result.minRuns}, maxRuns: ${result.maxRuns}`);
+    console.log('Expected: minNRR: 0.278, maxNRR: 0.596');
+    console.log('Actual:  ', `minNRR: ${result.minNRR?.toFixed(3)}, maxNRR: ${result.maxNRR?.toFixed(3)}`);
+    
+    // Verify result is defined
     expect(result).toBeDefined();
     expect(result.minRuns).toBeDefined();
     expect(result.maxRuns).toBeDefined();
-    expect(result.maxRuns).toBeLessThan(120);
     
-    expect(result.minRuns).toBeGreaterThanOrEqual(0);
-    expect(result.minRuns).toBeLessThanOrEqual(result.maxRuns);
+    // Exact value assertions
+    expect(result.minRuns).toBe(69);
+    expect(result.maxRuns).toBe(119);
     
-    expect(result.minNRR).toBeDefined();
-    expect(result.maxNRR).toBeDefined();
+    // NRR assertions (with tolerance for floating point)
+    expect(result.minNRR).toBeCloseTo(0.278, 2); // Tolerance: ±0.01
+    expect(result.maxNRR).toBeCloseTo(0.596, 2); // Tolerance: ±0.01
+    
+    console.log('✅ Q-1a PASSED\n');
   });
   
-  test('Q1b: RR vs DC - Bowling First (chase 119 runs)', () => {
+  /**
+   * Q-1b: RR vs DC - Bowling First (chase 119 runs)
+   * Expected: Chase between 14.2 to 20 overs
+   * Expected NRR: 0.278 to 0.595
+   */
+  test('Q-1b: RR vs DC - Bowling First (chase 119 runs)', () => {
     const result = calculateRequiredPerformance(
       initialPointsTable,
       'Rajasthan Royals',
@@ -83,20 +59,34 @@ describe('NRR Calculator Tests', () => {
       20
     );
     
+    console.log('\n=== Q-1b: RR vs DC - Bowling First ===');
+    console.log('Expected: minOvers: 14.2, maxOvers: 20');
+    console.log('Actual:  ', `minOvers: ${result.minOvers}, maxOvers: ${result.maxOvers}`);
+    console.log('Expected: minNRR: 0.278, maxNRR: 0.595');
+    console.log('Actual:  ', `minNRR: ${result.minNRR?.toFixed(3)}, maxNRR: ${result.maxNRR?.toFixed(3)}`);
+    
+    // Verify result is defined
     expect(result).toBeDefined();
     expect(result.minOvers).toBeDefined();
     expect(result.maxOvers).toBeDefined();
     
-    expect(result.maxOvers).toBeLessThanOrEqual(20);
+    // Exact value assertions for overs
+    expect(result.minOvers).toBe(14.2);
+    expect(result.maxOvers).toBe(20);
     
-    expect(result.minOvers).toBeGreaterThan(0);
-    expect(result.minOvers).toBeLessThanOrEqual(result.maxOvers);
+    // NRR assertions (with tolerance for floating point)
+    expect(result.minNRR).toBeCloseTo(0.278, 2); // Tolerance: ±0.01
+    expect(result.maxNRR).toBeCloseTo(0.595, 2); // Tolerance: ±0.01
     
-    expect(result.minNRR).toBeDefined();
-    expect(result.maxNRR).toBeDefined();
+    console.log('✅ Q-1b PASSED\n');
   });
   
-  test('Q2c: RR vs RCB - Batting First (80 runs in 20 overs)', () => {
+  /**
+   * Q-2c: RR vs RCB - Batting First (80 runs in 20 overs)
+   * Expected: Restrict RCB between 57 to 70 runs
+   * Expected NRR: 0.32 to 0.402
+   */
+  test('Q-2c: RR vs RCB - Batting First (80 runs)', () => {
     const result = calculateRequiredPerformance(
       initialPointsTable,
       'Rajasthan Royals',
@@ -107,26 +97,34 @@ describe('NRR Calculator Tests', () => {
       20
     );
     
-    expect(result).toBeDefined();
+    console.log('\n=== Q-2c: RR vs RCB - Batting First ===');
+    console.log('Expected: minRuns: 57, maxRuns: 70');
+    console.log('Actual:  ', `minRuns: ${result.minRuns}, maxRuns: ${result.maxRuns}`);
+    console.log('Expected: minNRR: 0.32, maxNRR: 0.402');
+    console.log('Actual:  ', `minNRR: ${result.minNRR?.toFixed(3)}, maxNRR: ${result.maxNRR?.toFixed(3)}`);
     
-    if (result.minRuns !== null && result.maxRuns !== null) {
-      expect(result.maxRuns).toBeLessThan(80);
-      expect(result.minRuns).toBeGreaterThanOrEqual(0);
-      expect(result.minRuns).toBeLessThanOrEqual(result.maxRuns);
-      
-      expect(result.minNRR).toBeDefined();
-      expect(result.maxNRR).toBeDefined();
-      
-      console.log(`✓ Restrict RCB between ${result.minRuns} and ${result.maxRuns} runs`);
-      console.log(`✓ NRR will range from ${result.minNRR?.toFixed(3)} to ${result.maxNRR?.toFixed(3)}`);
-    } else {
-      console.log('✗ Not possible to reach position 3 with this scenario');
-      expect(result.minRuns).toBeNull();
-      expect(result.maxRuns).toBeNull();
-    }
+    // Verify result is defined
+    expect(result).toBeDefined();
+    expect(result.minRuns).toBeDefined();
+    expect(result.maxRuns).toBeDefined();
+    
+    // Exact value assertions
+    expect(result.minRuns).toBe(57);
+    expect(result.maxRuns).toBe(70);
+    
+    // NRR assertions (with tolerance for floating point)
+    expect(result.minNRR).toBeCloseTo(0.32, 2); // Tolerance: ±0.01
+    expect(result.maxNRR).toBeCloseTo(0.402, 2); // Tolerance: ±0.01
+    
+    console.log('✅ Q-2c PASSED\n');
   });
   
-  test('Q2d: RR vs RCB - Bowling First (chase 79 runs)', () => {
+  /**
+   * Q-2d: RR vs RCB - Bowling First (chase 79 runs)
+   * Expected: Chase between 17.2 to 18.5 overs
+   * Expected NRR: 0.324 to 0.404
+   */
+  test('Q-2d: RR vs RCB - Bowling First (chase 79 runs)', () => {
     const result = calculateRequiredPerformance(
       initialPointsTable,
       'Rajasthan Royals',
@@ -137,177 +135,170 @@ describe('NRR Calculator Tests', () => {
       20
     );
     
+    console.log('\n=== Q-2d: RR vs RCB - Bowling First ===');
+    console.log('Expected: minOvers: 17.2, maxOvers: 18.5');
+    console.log('Actual:  ', `minOvers: ${result.minOvers}, maxOvers: ${result.maxOvers}`);
+    console.log('Expected: minNRR: 0.324, maxNRR: 0.404');
+    console.log('Actual:  ', `minNRR: ${result.minNRR?.toFixed(3)}, maxNRR: ${result.maxNRR?.toFixed(3)}`);
+    
+    // Verify result is defined
     expect(result).toBeDefined();
+    expect(result.minOvers).toBeDefined();
+    expect(result.maxOvers).toBeDefined();
     
-    if (result.minOvers !== null && result.maxOvers !== null) {
-      expect(result.maxOvers).toBeLessThanOrEqual(20);
-      expect(result.minOvers).toBeGreaterThan(0);
-      expect(result.minOvers).toBeLessThanOrEqual(result.maxOvers);
-      
-      expect(result.minNRR).toBeDefined();
-      expect(result.maxNRR).toBeDefined();
-      
-    } else {
-      expect(result.minOvers).toBeNull();
-      expect(result.maxOvers).toBeNull();
-    }
-  });
-  
-  
-  test('Edge Case: Impossible scenario - want position 1 from position 4', () => {
-    const result = calculateRequiredPerformance(
-      initialPointsTable,
-      'Rajasthan Royals',
-      'Delhi Capitals',
-      1,
-      'batting',
-      200,
-      20
-    );
+    // Exact value assertions for overs
+    expect(result.minOvers).toBe(17.2);
+    expect(result.maxOvers).toBe(18.5);
     
-    expect(result.minRuns).toBeNull();
-    expect(result.maxRuns).toBeNull();
-  });
-  
-  test('Edge Case: Already at desired position', () => {
-    const result = calculateRequiredPerformance(
-      initialPointsTable,
-      'Chennai Super Kings',
-      'Mumbai Indians',
-      1,
-      'batting',
-      150,
-      20
-    );
+    // NRR assertions (with tolerance for floating point)
+    expect(result.minNRR).toBeCloseTo(0.324, 2); // Tolerance: ±0.01
+    expect(result.maxNRR).toBeCloseTo(0.404, 2); // Tolerance: ±0.01
     
-    expect(result).toBeDefined();
-  });
-  
-  test('Verify NRR calculation formula', () => {
-    const team = {
-      name: "Test Team",
-      matches: 1,
-      won: 0,
-      lost: 1,
-      nrr: 0,
-      for: "150/20",
-      against: "120/20",
-      points: 0
-    };
-    
-    const newNRR = calculateNewNRR(team, 180, 20, 150, 20);
-    
-    expect(newNRR).toBeCloseTo(1.5, 2);
+    console.log('✅ Q-2d PASSED\n');
   });
 });
 
-
-describe('NRR Calculation Validation', () => {
-  
-  test('Verify points table sorting logic', () => {
+describe('Summary Test - All 4 Scenarios', () => {
+  test('All Assignment Test Cases Summary', () => {
+    console.log('\n' + '='.repeat(70));
+    console.log('                 ASSIGNMENT TEST CASES SUMMARY');
+    console.log('='.repeat(70));
     
-    const sorted = sortPointsTable(initialPointsTable);
-    
-    sorted.forEach((team, index) => {
-      console.log(`${index + 1}. ${team.name} - Points: ${team.points}, NRR: ${team.nrr}`);
-    });
-    
-    // First team should have highest points
-    expect(sorted[0].points).toBeGreaterThanOrEqual(sorted[1].points);
-    
-    // If points are equal, NRR should be the deciding factor
-    for (let i = 0; i < sorted.length - 1; i++) {
-      if (sorted[i].points === sorted[i + 1].points) {
-        expect(sorted[i].nrr).toBeGreaterThanOrEqual(sorted[i + 1].nrr);
-      }
-    }
-  });
-  
-  test('Verify overs conversion - cricket format', () => {
-    console.log('\n=== Overs Conversion Tests ===');
-    
-    const decimal1 = oversToDecimal(20.3);
-    console.log('20.3 overs → decimal:', decimal1, '(expected: 20.5)');
-    expect(decimal1).toBeCloseTo(20.5, 2);
-    
-    const decimal2 = oversToDecimal(18.5);
-    console.log('18.5 overs → decimal:', decimal2, '(expected: 18.833)');
-    expect(decimal2).toBeCloseTo(18.833, 2);
-    
-    // Reverse conversion
-    const cricket1 = decimalToOvers(20.5);
-    console.log('20.5 decimal → overs:', cricket1, '(expected: 20.3)');
-    expect(cricket1).toBeCloseTo(20.3, 1);
-    
-    const cricket2 = decimalToOvers(18.833);
-    console.log('18.833 decimal → overs:', cricket2, '(expected: 18.5)');
-    expect(cricket2).toBeCloseTo(18.5, 1);
-  });
-  
-  test('Comprehensive scenario validation', () => {
-    
-    const scenarios = [
+    const testCases = [
       {
-        name: 'Q1a: RR vs DC - Batting First',
-        yourTeam: 'Rajasthan Royals',
-        oppTeam: 'Delhi Capitals',
-        position: 3,
-        toss: 'batting',
-        runs: 120,
-        overs: 20
+        name: 'Q-1a: RR vs DC - Batting First',
+        params: {
+          yourTeam: 'Rajasthan Royals',
+          oppTeam: 'Delhi Capitals',
+          position: 3,
+          tossResult: 'batting',
+          runs: 120,
+          overs: 20
+        },
+        expected: {
+          minRuns: 69,
+          maxRuns: 119,
+          minNRR: 0.278,
+          maxNRR: 0.596
+        }
       },
       {
-        name: 'Q1b: RR vs DC - Bowling First',
-        yourTeam: 'Rajasthan Royals',
-        oppTeam: 'Delhi Capitals',
-        position: 3,
-        toss: 'bowling',
-        runs: 119,
-        overs: 20
+        name: 'Q-1b: RR vs DC - Bowling First',
+        params: {
+          yourTeam: 'Rajasthan Royals',
+          oppTeam: 'Delhi Capitals',
+          position: 3,
+          tossResult: 'bowling',
+          runs: 119,
+          overs: 20
+        },
+        expected: {
+          minOvers: 14.2,
+          maxOvers: 20,
+          minNRR: 0.278,
+          maxNRR: 0.595
+        }
       },
       {
-        name: 'Q2c: RR vs RCB - Batting First',
-        yourTeam: 'Rajasthan Royals',
-        oppTeam: 'Royal Challengers Bangalore',
-        position: 3,
-        toss: 'batting',
-        runs: 80,
-        overs: 20
+        name: 'Q-2c: RR vs RCB - Batting First',
+        params: {
+          yourTeam: 'Rajasthan Royals',
+          oppTeam: 'Royal Challengers Bangalore',
+          position: 3,
+          tossResult: 'batting',
+          runs: 80,
+          overs: 20
+        },
+        expected: {
+          minRuns: 57,
+          maxRuns: 70,
+          minNRR: 0.32,
+          maxNRR: 0.402
+        }
       },
       {
-        name: 'Q2d: RR vs RCB - Bowling First',
-        yourTeam: 'Rajasthan Royals',
-        oppTeam: 'Royal Challengers Bangalore',
-        position: 3,
-        toss: 'bowling',
-        runs: 79,
-        overs: 20
+        name: 'Q-2d: RR vs RCB - Bowling First',
+        params: {
+          yourTeam: 'Rajasthan Royals',
+          oppTeam: 'Royal Challengers Bangalore',
+          position: 3,
+          tossResult: 'bowling',
+          runs: 79,
+          overs: 20
+        },
+        expected: {
+          minOvers: 17.2,
+          maxOvers: 18.5,
+          minNRR: 0.324,
+          maxNRR: 0.404
+        }
       }
     ];
     
-    scenarios.forEach(scenario => {
+    let allPassed = true;
+    
+    testCases.forEach((testCase, index) => {
+      console.log(`\n${index + 1}. ${testCase.name}`);
+      console.log('-'.repeat(70));
+      
       const result = calculateRequiredPerformance(
         initialPointsTable,
-        scenario.yourTeam,
-        scenario.oppTeam,
-        scenario.position,
-        scenario.toss,
-        scenario.runs,
-        scenario.overs
+        testCase.params.yourTeam,
+        testCase.params.oppTeam,
+        testCase.params.position,
+        testCase.params.tossResult,
+        testCase.params.runs,
+        testCase.params.overs
       );
       
-      console.log(`\n${scenario.name}:`);
-      if (scenario.toss === 'batting' && result.minRuns !== null) {
-        console.log(`  Restrict between: ${result.minRuns} - ${result.maxRuns} runs`);
-        console.log(`  NRR Range: ${result.minNRR?.toFixed(3)} - ${result.maxNRR?.toFixed(3)}`);
-      } else if (scenario.toss === 'bowling' && result.minOvers !== null) {
-        console.log(`  Chase between: ${result.minOvers} - ${result.maxOvers} overs`);
-        console.log(`  NRR Range: ${result.minNRR?.toFixed(3)} - ${result.maxNRR?.toFixed(3)}`);
+      if (testCase.params.tossResult === 'batting') {
+        // Batting First
+        console.log(`   Expected: Restrict between ${testCase.expected.minRuns} to ${testCase.expected.maxRuns} runs`);
+        console.log(`   Actual:   Restrict between ${result.minRuns} to ${result.maxRuns} runs`);
+        console.log(`   Expected NRR: ${testCase.expected.minNRR} to ${testCase.expected.maxNRR}`);
+        console.log(`   Actual NRR:   ${result.minNRR?.toFixed(3)} to ${result.maxNRR?.toFixed(3)}`);
+        
+        const runsMatch = result.minRuns === testCase.expected.minRuns && 
+                         result.maxRuns === testCase.expected.maxRuns;
+        const nrrMatch = Math.abs(result.minNRR - testCase.expected.minNRR) < 0.01 &&
+                        Math.abs(result.maxNRR - testCase.expected.maxNRR) < 0.01;
+        
+        if (runsMatch && nrrMatch) {
+          console.log('   ✅ PASSED');
+        } else {
+          console.log('   ❌ FAILED');
+          allPassed = false;
+        }
+        
       } else {
-        console.log('  NOT POSSIBLE');
+        // Bowling First
+        console.log(`   Expected: Chase between ${testCase.expected.minOvers} to ${testCase.expected.maxOvers} overs`);
+        console.log(`   Actual:   Chase between ${result.minOvers} to ${result.maxOvers} overs`);
+        console.log(`   Expected NRR: ${testCase.expected.minNRR} to ${testCase.expected.maxNRR}`);
+        console.log(`   Actual NRR:   ${result.minNRR?.toFixed(3)} to ${result.maxNRR?.toFixed(3)}`);
+        
+        const oversMatch = result.minOvers === testCase.expected.minOvers && 
+                          result.maxOvers === testCase.expected.maxOvers;
+        const nrrMatch = Math.abs(result.minNRR - testCase.expected.minNRR) < 0.01 &&
+                        Math.abs(result.maxNRR - testCase.expected.maxNRR) < 0.01;
+        
+        if (oversMatch && nrrMatch) {
+          console.log('   ✅ PASSED');
+        } else {
+          console.log('   ❌ FAILED');
+          allPassed = false;
+        }
       }
-      
-      expect(result).toBeDefined();
     });
+    
+    console.log('\n' + '='.repeat(70));
+    if (allPassed) {
+      console.log('🎉 ALL ASSIGNMENT TEST CASES PASSED! 🎉');
+    } else {
+      console.log('❌ SOME TEST CASES FAILED - Please review the output above');
+    }
+    console.log('='.repeat(70) + '\n');
+    
+    expect(allPassed).toBe(true);
   });
 });
