@@ -1,6 +1,7 @@
 import { clonePointsTable } from "../models/PointsTable.js";
 import { updateTeamAfterMatch } from "./nrrCalculator.js";
 import { sortPointsTable, getTeamPosition } from "../utils/tableOperations.js";
+import { oversToDecimal, decimalToOvers } from "../utils/tableOperations.js";
 
 /**
  * Simulate a match and return the updated points table with team positions
@@ -55,6 +56,29 @@ function simulateMatch(
 }
 
 /**
+ * Generate valid cricket overs
+ * Returns array like: [0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 1.1, 1.2, ...]
+ */
+function generateValidOvers(minOvers, maxOvers) {
+  const validOvers = [];
+
+  const minComplete = Math.floor(minOvers);
+  const maxComplete = Math.floor(maxOvers);
+
+  for (let over = minComplete; over <= maxComplete; over++) {
+    for (let ball = 0; ball <= 5; ball++) {
+      const cricketOver = parseFloat(`${over}.${ball}`);
+
+      if (cricketOver >= minOvers && cricketOver <= maxOvers) {
+        validOvers.push(cricketOver);
+      }
+    }
+  }
+
+  return validOvers;
+}
+
+/**
  * Find the range of runs opponent can score for your team to reach desired position
  * (Batting First scenario)
  */
@@ -89,7 +113,7 @@ export function findRunsToRestrict(
     const position = getTeamPosition(simulatedTable, yourTeamName);
     const yourTeam = simulatedTable.find((t) => t.name === yourTeamName);
 
-    if (position <= desiredPosition) {
+    if (position == desiredPosition) {
       if (validMin === null) {
         validMin = runs;
         minNRR = yourTeam.nrr;
@@ -119,16 +143,16 @@ export function findOversToChase(
   runsToChase,
   totalOvers
 ) {
-  let minOvers = 0.1;
-  let maxOvers = totalOvers;
-
   let validMin = null;
   let validMax = null;
   let minNRR = null;
   let maxNRR = null;
 
-  // Try different over values with precision of 0.1
-  for (let overs = minOvers; overs <= maxOvers; overs += 0.1) {
+  // Generate all valid cricket overs from 0.1 to totalOvers
+  const validOvers = generateValidOvers(0.1, totalOvers);
+
+  // Try each valid over value
+  for (const overs of validOvers) {
     const simulatedTable = simulateMatch(
       table,
       yourTeamName,
@@ -142,7 +166,7 @@ export function findOversToChase(
     const position = getTeamPosition(simulatedTable, yourTeamName);
     const yourTeam = simulatedTable.find((t) => t.name === yourTeamName);
 
-    if (position <= desiredPosition) {
+    if (position == desiredPosition) {
       if (validMin === null) {
         validMin = overs;
         minNRR = yourTeam.nrr;
@@ -153,8 +177,8 @@ export function findOversToChase(
   }
 
   return {
-    minOvers: validMin ? parseFloat(validMin.toFixed(1)) : null,
-    maxOvers: validMax ? parseFloat(validMax.toFixed(1)) : null,
+    minOvers: validMin,
+    maxOvers: validMax,
     minNRR: minNRR,
     maxNRR: maxNRR,
   };
